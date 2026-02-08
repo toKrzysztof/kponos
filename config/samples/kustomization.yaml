@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- orphanage_v1alpha1_orphanagepolicy.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

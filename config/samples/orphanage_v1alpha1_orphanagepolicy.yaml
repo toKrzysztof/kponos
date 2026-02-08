@@ -1,0 +1,9 @@
+apiVersion: orphanage.kponos.io/v1alpha1
+kind: OrphanagePolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: kponos
+    app.kubernetes.io/managed-by: kustomize
+  name: orphanagepolicy-sample
+spec:
+  # TODO(user): Add fields here
