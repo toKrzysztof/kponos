@@ -23,13 +23,22 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// ResourceType represents a Kubernetes resource type to monitor
+// +kubebuilder:validation:Enum=Secret;ConfigMap
+type ResourceType string
+
+const (
+	// ResourceTypeSecret represents Secret resources
+	ResourceTypeSecret ResourceType = "Secret"
+	// ResourceTypeConfigMap represents ConfigMap resources
+	ResourceTypeConfigMap ResourceType = "ConfigMap"
+)
+
 // OrphanagePolicySpec defines the desired state of OrphanagePolicy.
 type OrphanagePolicySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of OrphanagePolicy. Edit orphanagepolicy_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ResourceTypes specifies the Kubernetes resource types to monitor
+	// Supported values: "Secret", "ConfigMap"
+	ResourceTypes []ResourceType `json:"resourceTypes,omitempty"`
 }
 
 // OrphanagePolicyStatus defines the observed state of OrphanagePolicy.
