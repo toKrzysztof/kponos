@@ -64,24 +64,3 @@ func (s *ReferenceAnalyzer) FindReferencesForConfigMap(ctx context.Context, conf
 
 	return strategy.FindConfigMapReferences(ctx, s.Client, configMapName, namespace)
 }
-
-// IsOrphaned checks if a Secret or ConfigMap is orphaned (has no references)
-func (s *ReferenceAnalyzer) IsOrphaned(ctx context.Context, secretName string, configMapName string, namespace string, resourceType string) (bool, error) {
-	if secretName != "" {
-		refs, err := s.FindReferencesForSecret(ctx, secretName, namespace, resourceType)
-		if err != nil {
-			return false, err
-		}
-		return len(refs) == 0, nil
-	}
-	
-	if configMapName != "" {
-		refs, err := s.FindReferencesForConfigMap(ctx, configMapName, namespace, resourceType)
-		if err != nil {
-			return false, err
-		}
-		return len(refs) == 0, nil
-	}
-	
-	return false, nil
-}

@@ -26,7 +26,6 @@ func NewServiceAccountHandler(client client.Client) *ServiceAccountHandler {
 func (h *ServiceAccountHandler) FindReferences(ctx context.Context, c client.Client, secretName, configMapName string, namespace string) ([]client.Object, error) {
 	var serviceAccounts []client.Object
 
-	// Find Secret references if secretName is provided
 	secretRefs, err := h.referenceAnalyzer.FindReferencesForSecret(ctx, secretName, namespace, "ServiceAccount")
 	if err != nil {
 		return nil, err
