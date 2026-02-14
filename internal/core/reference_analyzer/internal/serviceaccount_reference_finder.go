@@ -13,9 +13,9 @@ type ServiceAccountReferenceFinder struct {
 }
 
 // NewServiceAccountReferenceFinder creates a new ServiceAccountReferenceFinder
-func NewServiceAccountReferenceFinder(client client.Client) *ServiceAccountReferenceFinder {
+func NewServiceAccountReferenceFinder(c client.Client) *ServiceAccountReferenceFinder {
 	return &ServiceAccountReferenceFinder{
-		Client: client,
+		Client: c,
 	}
 }
 
@@ -58,7 +58,7 @@ func (f *ServiceAccountReferenceFinder) serviceAccountReferencesSecret(serviceAc
 }
 
 // ServiceAccount does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Context, client client.Client, configMapName, namespace string) ([]client.Object, error) {
+func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
 	return nil, nil
 }
 
@@ -66,4 +66,3 @@ func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Cont
 func (f *ServiceAccountReferenceFinder) GetResourceType() string {
 	return "ServiceAccount"
 }
-

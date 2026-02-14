@@ -11,11 +11,11 @@ import (
 // ReferenceFinderStrategy defines the interface for finding references in a specific resource type
 type ReferenceFinderStrategy interface {
 	// FindSecretReferences finds all resources of this type that reference the given Secret
-	FindSecretReferences(ctx context.Context, client client.Client, secretName, namespace string) ([]client.Object, error)
-	
+	FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error)
+
 	// FindConfigMapReferences finds all resources of this type that reference the given ConfigMap
-	FindConfigMapReferences(ctx context.Context, client client.Client, configMapName, namespace string) ([]client.Object, error)
-	
+	FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error)
+
 	// GetResourceType returns the Kubernetes resource type this strategy handles
 	GetResourceType() string
 }
@@ -27,18 +27,18 @@ type ReferenceAnalyzer struct {
 }
 
 // NewReferenceAnalyzer creates a new ReferenceAnalyzer with all strategies initialized
-func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
+func NewReferenceAnalyzer(c client.Client) *ReferenceAnalyzer {
 	strategies := map[string]ReferenceFinderStrategy{
-		"Pod":            internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypePod),
-		"Deployment":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
-		"StatefulSet":   internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
-		"DaemonSet":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
-		"Ingress":       internal.NewIngressReferenceFinder(client),
-		"ServiceAccount": internal.NewServiceAccountReferenceFinder(client),
+		"Pod":            internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypePod),
+		"Deployment":     internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDeployment),
+		"StatefulSet":    internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeStatefulSet),
+		"DaemonSet":      internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDaemonSet),
+		"Ingress":        internal.NewIngressReferenceFinder(c),
+		"ServiceAccount": internal.NewServiceAccountReferenceFinder(c),
 	}
-	
+
 	return &ReferenceAnalyzer{
-		Client:     client,
+		Client:     c,
 		strategies: strategies,
 	}
 }

@@ -12,8 +12,8 @@ import (
 type WorkloadResourceType string
 
 const (
-	WorkloadResourceTypePod        WorkloadResourceType = "Pod"
-	WorkloadResourceTypeDeployment WorkloadResourceType = "Deployment"
+	WorkloadResourceTypePod         WorkloadResourceType = "Pod"
+	WorkloadResourceTypeDeployment  WorkloadResourceType = "Deployment"
 	WorkloadResourceTypeStatefulSet WorkloadResourceType = "StatefulSet"
 	WorkloadResourceTypeDaemonSet   WorkloadResourceType = "DaemonSet"
 )
@@ -26,9 +26,9 @@ type WorkloadReferenceFinder struct {
 }
 
 // NewWorkloadReferenceFinder creates a new WorkloadReferenceFinder for the given resource type
-func NewWorkloadReferenceFinder(client client.Client, resourceType WorkloadResourceType) *WorkloadReferenceFinder {
+func NewWorkloadReferenceFinder(c client.Client, resourceType WorkloadResourceType) *WorkloadReferenceFinder {
 	return &WorkloadReferenceFinder{
-		Client:       client,
+		Client:       c,
 		resourceType: resourceType,
 	}
 }

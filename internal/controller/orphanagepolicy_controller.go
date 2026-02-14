@@ -13,6 +13,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	orphanagev1alpha1 "github.com/toKrzysztof/kponos/api/v1alpha1"
+	application "github.com/toKrzysztof/kponos/internal/application/orphanage"
+	presentation "github.com/toKrzysztof/kponos/internal/presentation"
 )
 
 var log = logf.Log.WithName("controller_orphanagepolicy")
@@ -20,7 +22,9 @@ var log = logf.Log.WithName("controller_orphanagepolicy")
 // OrphanagePolicyReconciler reconciles an OrphanagePolicy object
 type OrphanagePolicyReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme       *runtime.Scheme
+	orphanage    *application.Orphanage
+	statusWriter *presentation.StatusWriter
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -35,14 +39,28 @@ func (r *OrphanagePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	secretList := &corev1.SecretList{}
-	if err := r.List(ctx, secretList, client.InNamespace(req.Namespace)); err != nil {
-		logger.Error(err, "unable to list Secrets")
+	orphanedSecrets, err := r.orphanage.FindOrphans(ctx, "Secret", req.Namespace)
+	if err != nil {
+		logger.Error(err, "unable to find orphaned Secrets")
+		return ctrl.Result{}, err
 	}
 
-	configMapList := &corev1.ConfigMapList{}
-	if err := r.List(ctx, configMapList, client.InNamespace(req.Namespace)); err != nil {
-		logger.Error(err, "unable to list ConfigMaps")
+	logger.Info("Found ${orphanedSecrets} orphaned Secrets", "orphanedSecrets", len(orphanedSecrets))
+
+	orphanedConfigMaps, err := r.orphanage.FindOrphans(ctx, "ConfigMap", req.Namespace)
+	if err != nil {
+		logger.Error(err, "unable to find orphaned ConfigMaps")
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("Found ${orphanedConfigMaps} orphaned Configmaps", "orphanedConfigMaps", len(orphanedConfigMaps))
+
+	orphans := append(orphanedSecrets, orphanedConfigMaps...)
+
+	err = r.statusWriter.UpdateStatus(ctx, policy, orphans)
+	if err != nil {
+		logger.Error(err, "unable to update status")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
