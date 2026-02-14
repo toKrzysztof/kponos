@@ -3,32 +3,36 @@ package resourceHandler
 import (
 	"context"
 
-	networkingv1 "k8s.io/api/networking/v1"
+	core "github.com/toKrzysztof/kponos/internal/core/reference_analyzer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IngressHandler handles finding references to Secrets and ConfigMaps in Ingress resources
 type IngressHandler struct {
 	client.Client
+	referenceAnalyzer *core.ReferenceAnalyzer
 }
 
 // NewIngressHandler creates a new IngressHandler
 func NewIngressHandler(client client.Client) *IngressHandler {
 	return &IngressHandler{
-		Client: client,
+		Client:            client,
+		referenceAnalyzer: core.NewReferenceAnalyzer(client),
 	}
 }
 
-// FindReferences finds all Ingresses that reference the given Secret or ConfigMap
-func (h *IngressHandler) FindReferences(ctx context.Context, c client.Client, secretName, configMapName string, namespace string) ([]client.Object, error) {
+// FindReferences finds all Ingresses that reference the given Secret
+func (h *IngressHandler) FindReferences(ctx context.Context, c client.Client, secretName string, configMapName string, namespace string) ([]client.Object, error) {
 	var ingresses []client.Object
-	ingressList := &networkingv1.IngressList{}
-	if err := c.List(ctx, ingressList, client.InNamespace(namespace)); err != nil {
-		return ingresses, err
+
+	// Find Secret references if secretName is provided
+	secretRefs, err := h.referenceAnalyzer.FindReferencesForSecret(ctx, secretName, namespace, "Ingress")
+	if err != nil {
+		return nil, err
 	}
-	
-	// TODO: Filter ingresses that reference the secret/configmap
-	
+	ingresses = append(ingresses, secretRefs...)
+
+
 	return ingresses, nil
 }
 
