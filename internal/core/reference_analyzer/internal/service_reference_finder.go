@@ -28,9 +28,8 @@ func (f *ServiceReferenceFinder) FindSecretReferences(ctx context.Context, clien
 	return nil, nil
 }
 
-// FindConfigMapReferences finds all Services that reference the given ConfigMap
+// Service does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
 func (f *ServiceReferenceFinder) FindConfigMapReferences(ctx context.Context, client client.Client, configMapName, namespace string) ([]client.Object, error) {
-	// TODO: Implement logic to find Services referencing the configmap
 	return nil, nil
 }
 

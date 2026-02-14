@@ -47,24 +47,22 @@ func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
 // FindReferencesForSecret finds all resources that reference the given Secret
 // If resourceType is provided, only searches that resource type; otherwise searches all types
 func (s *ReferenceAnalyzer) FindReferencesForSecret(ctx context.Context, secretName, namespace string, resourceType string) ([]client.Object, error) {
-	// If resourceType specified, use strategy pattern to get specific finder
 	strategy := s.strategies[resourceType]
 	if strategy == nil {
 		return nil, fmt.Errorf("unknown resource type: %s", resourceType)
 	}
-	// Polymorphic dispatch to specific strategy
+
 	return strategy.FindSecretReferences(ctx, s.Client, secretName, namespace)
 }
 
 // FindReferencesForConfigMap finds all resources that reference the given ConfigMap
 // If resourceType is provided, only searches that resource type; otherwise searches all types
 func (s *ReferenceAnalyzer) FindReferencesForConfigMap(ctx context.Context, configMapName, namespace string, resourceType string) ([]client.Object, error) {
-	// If resourceType specified, use strategy pattern to get specific finder
 	strategy := s.strategies[resourceType]
 	if strategy == nil {
 		return nil, fmt.Errorf("unknown resource type: %s", resourceType)
 	}
-	// Polymorphic dispatch to specific strategy
+
 	return strategy.FindConfigMapReferences(ctx, s.Client, configMapName, namespace)
 }
 
