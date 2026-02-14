@@ -3,33 +3,46 @@ package resourceHandler
 import (
 	"context"
 
-	appsv1 "k8s.io/api/apps/v1"
+	core "github.com/toKrzysztof/kponos/internal/core/reference_analyzer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DaemonSetHandler handles finding references to Secrets and ConfigMaps in DaemonSet resources
 type DaemonSetHandler struct {
 	client.Client
+	referenceAnalyzer *core.ReferenceAnalyzer
 }
 
 // NewDaemonSetHandler creates a new DaemonSetHandler
 func NewDaemonSetHandler(client client.Client) *DaemonSetHandler {
 	return &DaemonSetHandler{
-		Client: client,
+		Client:            client,
+		referenceAnalyzer: core.NewReferenceAnalyzer(client),
 	}
 }
 
 // FindReferences finds all DaemonSets that reference the given Secret or ConfigMap
 func (h *DaemonSetHandler) FindReferences(ctx context.Context, c client.Client, secretName, configMapName string, namespace string) ([]client.Object, error) {
-
 	var daemonSets []client.Object
-	daemonSetList := &appsv1.DaemonSetList{}
-	if err := c.List(ctx, daemonSetList, client.InNamespace(namespace)); err != nil {
-		return daemonSets, err
+
+	// Find Secret references if secretName is provided
+	if secretName != "" {
+		secretRefs, err := h.referenceAnalyzer.FindReferencesForSecret(ctx, secretName, namespace, "DaemonSet")
+		if err != nil {
+			return nil, err
+		}
+		daemonSets = append(daemonSets, secretRefs...)
 	}
-	
-	// TODO: Filter daemonsets that reference the secret/configmap
-	
+
+	// Find ConfigMap references if configMapName is provided
+	if configMapName != "" {
+		configMapRefs, err := h.referenceAnalyzer.FindReferencesForConfigMap(ctx, configMapName, namespace, "DaemonSet")
+		if err != nil {
+			return nil, err
+		}
+		daemonSets = append(daemonSets, configMapRefs...)
+	}
+
 	return daemonSets, nil
 }
 
