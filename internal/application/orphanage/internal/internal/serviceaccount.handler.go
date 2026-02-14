@@ -3,32 +3,36 @@ package resourceHandler
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
+	core "github.com/toKrzysztof/kponos/internal/core/reference_analyzer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ServiceAccountHandler handles finding references to Secrets and ConfigMaps in ServiceAccount resources
 type ServiceAccountHandler struct {
 	client.Client
+	referenceAnalyzer *core.ReferenceAnalyzer
 }
 
 // NewServiceAccountHandler creates a new ServiceAccountHandler
 func NewServiceAccountHandler(client client.Client) *ServiceAccountHandler {
 	return &ServiceAccountHandler{
-		Client: client,
+		Client:            client,
+		referenceAnalyzer: core.NewReferenceAnalyzer(client),
 	}
 }
 
-// FindReferences finds all ServiceAccounts that reference the given Secret or ConfigMap
+// TODO: refactor to not use configMapName
+// FindReferences finds all ServiceAccounts that reference the given Secret
 func (h *ServiceAccountHandler) FindReferences(ctx context.Context, c client.Client, secretName, configMapName string, namespace string) ([]client.Object, error) {
 	var serviceAccounts []client.Object
-	serviceAccountList := &corev1.ServiceAccountList{}
-	if err := c.List(ctx, serviceAccountList, client.InNamespace(namespace)); err != nil {
-		return serviceAccounts, err
+
+	// Find Secret references if secretName is provided
+	secretRefs, err := h.referenceAnalyzer.FindReferencesForSecret(ctx, secretName, namespace, "ServiceAccount")
+	if err != nil {
+		return nil, err
 	}
-	
-	// TODO: Filter serviceaccounts that reference the secret/configmap
-	
+	serviceAccounts = append(serviceAccounts, secretRefs...)
+
 	return serviceAccounts, nil
 }
 

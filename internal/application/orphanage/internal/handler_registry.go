@@ -18,7 +18,6 @@ func NewHandlerRegistry(client client.Client) *HandlerRegistry {
 			"Deployment":    resourceHandler.NewDeploymentHandler(client),
 			"StatefulSet":   resourceHandler.NewStatefulSetHandler(client),
 			"DaemonSet":     resourceHandler.NewDaemonSetHandler(client),
-			"Service":       resourceHandler.NewServiceHandler(client),
 			"Ingress":       resourceHandler.NewIngressHandler(client),
 			"ServiceAccount": resourceHandler.NewServiceAccountHandler(client),
 		},
