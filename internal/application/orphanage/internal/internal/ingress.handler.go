@@ -16,17 +16,17 @@ type IngressHandler struct {
 }
 
 // NewIngressHandler creates a new IngressHandler
-func NewIngressHandler(client client.Client) *IngressHandler {
-	analyzer := core.NewReferenceAnalyzer(client)
+func NewIngressHandler(c client.Client) *IngressHandler {
+	analyzer := core.NewReferenceAnalyzer(c)
 	h := &IngressHandler{
-		Client:            client,
+		Client:            c,
 		referenceAnalyzer: analyzer,
 	}
-	
+
 	h.finders = map[string]ResourceReferenceFinder{
 		"Secret": h.findSecretReferences,
 	}
-	
+
 	return h
 }
 
@@ -34,12 +34,12 @@ func NewIngressHandler(client client.Client) *IngressHandler {
 func (h *IngressHandler) FindReferences(ctx context.Context, c client.Client, resource client.Object, namespace string) ([]client.Object, error) {
 	resourceKind := resource.GetObjectKind().GroupVersionKind().Kind
 	resourceName := resource.GetName()
-	
+
 	finder, exists := h.finders[resourceKind]
 	if !exists {
 		return nil, fmt.Errorf("unsupported resource type: %s", resourceKind)
 	}
-	
+
 	return finder(ctx, resourceName, namespace)
 }
 
@@ -52,4 +52,3 @@ func (h *IngressHandler) GetResourceType() string {
 func (h *IngressHandler) findSecretReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
 	return h.referenceAnalyzer.FindReferencesForSecret(ctx, resourceName, namespace, "Ingress")
 }
-

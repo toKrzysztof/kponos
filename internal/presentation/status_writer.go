@@ -15,9 +15,9 @@ type StatusWriter struct {
 }
 
 // NewStatusWriter creates a new StatusWriter
-func NewStatusWriter(client client.Client) *StatusWriter {
+func NewStatusWriter(c client.Client) *StatusWriter {
 	return &StatusWriter{
-		Client: client,
+		Client: c,
 	}
 }
 

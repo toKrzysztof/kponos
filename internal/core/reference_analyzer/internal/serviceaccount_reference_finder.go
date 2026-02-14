@@ -66,4 +66,3 @@ func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Cont
 func (f *ServiceAccountReferenceFinder) GetResourceType() string {
 	return "ServiceAccount"
 }
-

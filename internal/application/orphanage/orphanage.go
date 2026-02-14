@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	handler "github.com/toKrzysztof/kponos/internal/application/orphanage/internal"
+	handlerRegistry "github.com/toKrzysztof/kponos/internal/application/orphanage/internal"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -15,7 +15,7 @@ type OrphanFinder func(context.Context, string) ([]client.Object, error)
 // Orphanage handles finding orphaned resources in a namespace
 type Orphanage struct {
 	client          client.Client
-	handlerRegistry *handler.HandlerRegistry
+	handlerRegistry *handlerRegistry.HandlerRegistry
 	finders         map[string]OrphanFinder
 }
 
@@ -23,7 +23,7 @@ type Orphanage struct {
 func NewOrphanage(client client.Client) *Orphanage {
 	o := &Orphanage{
 		client:          client,
-		handlerRegistry: handler.NewHandlerRegistry(client),
+		handlerRegistry: handlerRegistry.NewHandlerRegistry(client),
 	}
 	
 	o.finders = map[string]OrphanFinder{
