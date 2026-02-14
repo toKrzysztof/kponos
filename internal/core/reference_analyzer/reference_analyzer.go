@@ -29,10 +29,10 @@ type ReferenceAnalyzer struct {
 // NewReferenceAnalyzer creates a new ReferenceAnalyzer with all strategies initialized
 func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
 	strategies := map[string]ReferenceFinderStrategy{
-		"Pod":            internal.NewPodReferenceFinder(client),
-		"Deployment":    internal.NewDeploymentReferenceFinder(client),
-		"StatefulSet":   internal.NewStatefulSetReferenceFinder(client),
-		"DaemonSet":     internal.NewDaemonSetReferenceFinder(client),
+		"Pod":            internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypePod),
+		"Deployment":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
+		"StatefulSet":   internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
+		"DaemonSet":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
 		"Service":       internal.NewServiceReferenceFinder(client),
 		"Ingress":       internal.NewIngressReferenceFinder(client),
 		"ServiceAccount": internal.NewServiceAccountReferenceFinder(client),
