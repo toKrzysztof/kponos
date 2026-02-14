@@ -25,35 +25,35 @@ func NewOrphanage(client client.Client) *Orphanage {
 		client:          client,
 		handlerRegistry: handlerRegistry.NewHandlerRegistry(client),
 	}
-	
+
 	o.finders = map[string]OrphanFinder{
 		"Secret":    o.findOrphanedSecrets,
 		"ConfigMap": o.findOrphanedConfigMaps,
 	}
-	
+
 	return o
 }
 
 // FindOrphans finds all orphaned Secrets and ConfigMaps in a namespace.
 // An orphan is a Secret or ConfigMap that is not referenced by any other resources.
-func (o *Orphanage) FindOrphans(ctx context.Context, resourceType string, namespace string) ([]client.Object, error) {	
+func (o *Orphanage) FindOrphans(ctx context.Context, resourceType string, namespace string) ([]client.Object, error) {
 	finder, exists := o.finders[resourceType]
 	if !exists {
 		return nil, fmt.Errorf("unsupported resource type: %s", resourceType)
 	}
-	
+
 	return finder(ctx, namespace)
 }
 
 // findOrphanedSecrets finds all orphaned Secrets in the given namespace
 func (o *Orphanage) findOrphanedSecrets(ctx context.Context, namespace string) ([]client.Object, error) {
 	var orphanedSecrets []client.Object
-	
+
 	secretList := &corev1.SecretList{}
 	if err := o.client.List(ctx, secretList, client.InNamespace(namespace)); err != nil {
 		return nil, fmt.Errorf("unable to list Secrets: %w", err)
 	}
-	
+
 	for i := range secretList.Items {
 		secret := &secretList.Items[i]
 		if isOrphaned, err := o.isOrphaned(ctx, secret, namespace); err != nil {
@@ -62,19 +62,19 @@ func (o *Orphanage) findOrphanedSecrets(ctx context.Context, namespace string) (
 			orphanedSecrets = append(orphanedSecrets, secret)
 		}
 	}
-	
+
 	return orphanedSecrets, nil
 }
 
 // findOrphanedConfigMaps finds all orphaned ConfigMaps in the given namespace
 func (o *Orphanage) findOrphanedConfigMaps(ctx context.Context, namespace string) ([]client.Object, error) {
 	var orphanedConfigMaps []client.Object
-	
+
 	configMapList := &corev1.ConfigMapList{}
 	if err := o.client.List(ctx, configMapList, client.InNamespace(namespace)); err != nil {
 		return nil, fmt.Errorf("unable to list ConfigMaps: %w", err)
 	}
-	
+
 	for i := range configMapList.Items {
 		configMap := &configMapList.Items[i]
 		if isOrphaned, err := o.isOrphaned(ctx, configMap, namespace); err != nil {
@@ -83,7 +83,7 @@ func (o *Orphanage) findOrphanedConfigMaps(ctx context.Context, namespace string
 			orphanedConfigMaps = append(orphanedConfigMaps, configMap)
 		}
 	}
-	
+
 	return orphanedConfigMaps, nil
 }
 

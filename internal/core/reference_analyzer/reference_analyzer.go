@@ -27,18 +27,18 @@ type ReferenceAnalyzer struct {
 }
 
 // NewReferenceAnalyzer creates a new ReferenceAnalyzer with all strategies initialized
-func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
+func NewReferenceAnalyzer(c client.Client) *ReferenceAnalyzer {
 	strategies := map[string]ReferenceFinderStrategy{
-		"Pod":            internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypePod),
-		"Deployment":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
-		"StatefulSet":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
-		"DaemonSet":      internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
-		"Ingress":        internal.NewIngressReferenceFinder(client),
-		"ServiceAccount": internal.NewServiceAccountReferenceFinder(client),
+		"Pod":            internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypePod),
+		"Deployment":     internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDeployment),
+		"StatefulSet":    internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeStatefulSet),
+		"DaemonSet":      internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDaemonSet),
+		"Ingress":        internal.NewIngressReferenceFinder(c),
+		"ServiceAccount": internal.NewServiceAccountReferenceFinder(c),
 	}
 
 	return &ReferenceAnalyzer{
-		Client:     client,
+		Client:     c,
 		strategies: strategies,
 	}
 }

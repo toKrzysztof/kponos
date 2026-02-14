@@ -22,8 +22,8 @@ var log = logf.Log.WithName("controller_orphanagepolicy")
 // OrphanagePolicyReconciler reconciles an OrphanagePolicy object
 type OrphanagePolicyReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	orphanage *application.Orphanage
+	Scheme       *runtime.Scheme
+	orphanage    *application.Orphanage
 	statusWriter *presentation.StatusWriter
 }
 
@@ -56,7 +56,7 @@ func (r *OrphanagePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger.Info("Found ${orphanedConfigMaps} orphaned Configmaps", "orphanedConfigMaps", len(orphanedConfigMaps))
 
 	orphans := append(orphanedSecrets, orphanedConfigMaps...)
-	
+
 	err = r.statusWriter.UpdateStatus(ctx, policy, orphans)
 	if err != nil {
 		logger.Error(err, "unable to update status")
