@@ -2,10 +2,11 @@ package presentation
 
 import (
 	"context"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 
 	orphanagev1alpha1 "github.com/toKrzysztof/kponos/api/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // StatusWriter handles writing status updates to OrphanagePolicy resources
@@ -21,18 +22,12 @@ func NewStatusWriter(client client.Client) *StatusWriter {
 }
 
 // UpdateStatus updates the status of an OrphanagePolicy
-func (s *StatusWriter) UpdateStatus(ctx context.Context, policy *orphanagev1alpha1.OrphanagePolicy) error {
-	// TODO: Implement status update logic
-	// Update policy.Status with current reconciliation state
+func (s *StatusWriter) UpdateStatus(ctx context.Context, policy *orphanagev1alpha1.OrphanagePolicy, orphans []orphanagev1alpha1.Orphan) error {
+	now := time.Now()
+
+	policy.Status.OrphanCount = len(orphans)
+	policy.Status.LastChanged = metav1.NewTime(now)
+	policy.Status.Orphans = orphans
+
 	return s.Status().Update(ctx, policy)
 }
-
-// UpdateStatusWithOrphanCount updates the status with orphan count information
-func (s *StatusWriter) UpdateStatusWithOrphanCount(ctx context.Context, policy *orphanagev1alpha1.OrphanagePolicy, secretOrphanCount, configMapOrphanCount int) error {
-	// TODO: Implement status update with orphan counts
-	// Update policy.Status with the counts
-	// Then call UpdateStatus
-	
-	return s.UpdateStatus(ctx, policy)
-}
-
