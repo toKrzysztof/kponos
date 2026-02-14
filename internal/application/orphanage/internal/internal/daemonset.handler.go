@@ -16,18 +16,18 @@ type DaemonSetHandler struct {
 }
 
 // NewDaemonSetHandler creates a new DaemonSetHandler
-func NewDaemonSetHandler(client client.Client) *DaemonSetHandler {
-	analyzer := core.NewReferenceAnalyzer(client)
+func NewDaemonSetHandler(c client.Client) *DaemonSetHandler {
+	analyzer := core.NewReferenceAnalyzer(c)
 	h := &DaemonSetHandler{
-		Client:            client,
+		Client:            c,
 		referenceAnalyzer: analyzer,
 	}
-	
+
 	h.finders = map[string]ResourceReferenceFinder{
 		"Secret":    h.findSecretReferences,
 		"ConfigMap": h.findConfigMapReferences,
 	}
-	
+
 	return h
 }
 
@@ -35,12 +35,12 @@ func NewDaemonSetHandler(client client.Client) *DaemonSetHandler {
 func (h *DaemonSetHandler) FindReferences(ctx context.Context, c client.Client, resource client.Object, namespace string) ([]client.Object, error) {
 	resourceKind := resource.GetObjectKind().GroupVersionKind().Kind
 	resourceName := resource.GetName()
-	
+
 	finder, exists := h.finders[resourceKind]
 	if !exists {
 		return nil, fmt.Errorf("unsupported resource type: %s", resourceKind)
 	}
-	
+
 	return finder(ctx, resourceName, namespace)
 }
 
@@ -58,4 +58,3 @@ func (h *DaemonSetHandler) findSecretReferences(ctx context.Context, resourceNam
 func (h *DaemonSetHandler) findConfigMapReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
 	return h.referenceAnalyzer.FindReferencesForConfigMap(ctx, resourceName, namespace, "DaemonSet")
 }
-

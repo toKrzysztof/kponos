@@ -16,18 +16,18 @@ type PodHandler struct {
 }
 
 // NewPodHandler creates a new PodHandler
-func NewPodHandler(client client.Client) *PodHandler {
-	analyzer := core.NewReferenceAnalyzer(client)
+func NewPodHandler(c client.Client) *PodHandler {
+	analyzer := core.NewReferenceAnalyzer(c)
 	h := &PodHandler{
-		Client:            client,
+		Client:            c,
 		referenceAnalyzer: analyzer,
 	}
-	
+
 	h.finders = map[string]ResourceReferenceFinder{
 		"Secret":    h.findSecretReferences,
 		"ConfigMap": h.findConfigMapReferences,
 	}
-	
+
 	return h
 }
 
@@ -35,12 +35,12 @@ func NewPodHandler(client client.Client) *PodHandler {
 func (h *PodHandler) FindReferences(ctx context.Context, c client.Client, resource client.Object, namespace string) ([]client.Object, error) {
 	resourceKind := resource.GetObjectKind().GroupVersionKind().Kind
 	resourceName := resource.GetName()
-	
+
 	finder, exists := h.finders[resourceKind]
 	if !exists {
 		return nil, fmt.Errorf("unsupported resource type: %s", resourceKind)
 	}
-	
+
 	return finder(ctx, resourceName, namespace)
 }
 
@@ -58,4 +58,3 @@ func (h *PodHandler) findSecretReferences(ctx context.Context, resourceName, nam
 func (h *PodHandler) findConfigMapReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
 	return h.referenceAnalyzer.FindReferencesForConfigMap(ctx, resourceName, namespace, "Pod")
 }
-

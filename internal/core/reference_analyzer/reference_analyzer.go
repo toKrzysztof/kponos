@@ -12,10 +12,10 @@ import (
 type ReferenceFinderStrategy interface {
 	// FindSecretReferences finds all resources of this type that reference the given Secret
 	FindSecretReferences(ctx context.Context, client client.Client, secretName, namespace string) ([]client.Object, error)
-	
+
 	// FindConfigMapReferences finds all resources of this type that reference the given ConfigMap
 	FindConfigMapReferences(ctx context.Context, client client.Client, configMapName, namespace string) ([]client.Object, error)
-	
+
 	// GetResourceType returns the Kubernetes resource type this strategy handles
 	GetResourceType() string
 }
@@ -30,13 +30,13 @@ type ReferenceAnalyzer struct {
 func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
 	strategies := map[string]ReferenceFinderStrategy{
 		"Pod":            internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypePod),
-		"Deployment":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
-		"StatefulSet":   internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
-		"DaemonSet":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
-		"Ingress":       internal.NewIngressReferenceFinder(client),
+		"Deployment":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
+		"StatefulSet":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
+		"DaemonSet":      internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
+		"Ingress":        internal.NewIngressReferenceFinder(client),
 		"ServiceAccount": internal.NewServiceAccountReferenceFinder(client),
 	}
-	
+
 	return &ReferenceAnalyzer{
 		Client:     client,
 		strategies: strategies,

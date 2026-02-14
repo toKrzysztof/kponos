@@ -16,18 +16,18 @@ type DeploymentHandler struct {
 }
 
 // NewDeploymentHandler creates a new DeploymentHandler
-func NewDeploymentHandler(client client.Client) *DeploymentHandler {
-	analyzer := core.NewReferenceAnalyzer(client)
+func NewDeploymentHandler(c client.Client) *DeploymentHandler {
+	analyzer := core.NewReferenceAnalyzer(c)
 	h := &DeploymentHandler{
-		Client:            client,
+		Client:            c,
 		referenceAnalyzer: analyzer,
 	}
-	
+
 	h.finders = map[string]ResourceReferenceFinder{
 		"Secret":    h.findSecretReferences,
 		"ConfigMap": h.findConfigMapReferences,
 	}
-	
+
 	return h
 }
 
@@ -35,12 +35,12 @@ func NewDeploymentHandler(client client.Client) *DeploymentHandler {
 func (h *DeploymentHandler) FindReferences(ctx context.Context, c client.Client, resource client.Object, namespace string) ([]client.Object, error) {
 	resourceKind := resource.GetObjectKind().GroupVersionKind().Kind
 	resourceName := resource.GetName()
-	
+
 	finder, exists := h.finders[resourceKind]
 	if !exists {
 		return nil, fmt.Errorf("unsupported resource type: %s", resourceKind)
 	}
-	
+
 	return finder(ctx, resourceName, namespace)
 }
 

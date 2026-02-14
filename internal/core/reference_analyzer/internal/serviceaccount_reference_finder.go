@@ -13,9 +13,9 @@ type ServiceAccountReferenceFinder struct {
 }
 
 // NewServiceAccountReferenceFinder creates a new ServiceAccountReferenceFinder
-func NewServiceAccountReferenceFinder(client client.Client) *ServiceAccountReferenceFinder {
+func NewServiceAccountReferenceFinder(c client.Client) *ServiceAccountReferenceFinder {
 	return &ServiceAccountReferenceFinder{
-		Client: client,
+		Client: c,
 	}
 }
 
