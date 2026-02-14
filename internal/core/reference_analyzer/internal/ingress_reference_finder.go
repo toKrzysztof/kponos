@@ -3,12 +3,9 @@ package internal
 import (
 	"context"
 
+	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// TODO: Implement logic to find Ingresses referencing the secret/configmap
-// Check:
-// - spec.tls[].secretName (for TLS secrets)
 
 // IngressReferenceFinder finds references to Secrets and ConfigMaps in Ingress resources
 type IngressReferenceFinder struct {
@@ -23,9 +20,34 @@ func NewIngressReferenceFinder(client client.Client) *IngressReferenceFinder {
 }
 
 // FindSecretReferences finds all Ingresses that reference the given Secret
-func (f *IngressReferenceFinder) FindSecretReferences(ctx context.Context, client client.Client, secretName, namespace string) ([]client.Object, error) {
-	// TODO: Implement logic to find Ingresses referencing the secret
-	return nil, nil
+func (f *IngressReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
+	var results []client.Object
+
+	ingressList := &networkingv1.IngressList{}
+	if err := c.List(ctx, ingressList, client.InNamespace(namespace)); err != nil {
+		return nil, err
+	}
+
+	for i := range ingressList.Items {
+		ingress := &ingressList.Items[i]
+		if f.ingressReferencesSecret(ingress, secretName) {
+			results = append(results, ingress)
+		}
+	}
+
+	return results, nil
+}
+
+// ingressReferencesSecret checks if an Ingress references the given secret
+func (f *IngressReferenceFinder) ingressReferencesSecret(ingress *networkingv1.Ingress, secretName string) bool {
+	// Check spec.tls[].secretName (for TLS secrets)
+	for _, tls := range ingress.Spec.TLS {
+		if tls.SecretName == secretName {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Ingress does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
