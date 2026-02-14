@@ -25,7 +25,6 @@ func NewIngressHandler(client client.Client) *IngressHandler {
 func (h *IngressHandler) FindReferences(ctx context.Context, c client.Client, secretName string, configMapName string, namespace string) ([]client.Object, error) {
 	var ingresses []client.Object
 
-	// Find Secret references if secretName is provided
 	secretRefs, err := h.referenceAnalyzer.FindReferencesForSecret(ctx, secretName, namespace, "Ingress")
 	if err != nil {
 		return nil, err

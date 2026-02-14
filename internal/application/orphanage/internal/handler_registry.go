@@ -13,6 +13,7 @@ type HandlerRegistry struct {
 // NewHandlerRegistry creates a new handler registry with all handlers initialized
 func NewHandlerRegistry(client client.Client) *HandlerRegistry {
 	return &HandlerRegistry{
+		// TODO: replace strings with strictly typed enums
 		handlers: map[string]ResourceHandler{
 			"Pod":            resourceHandler.NewPodHandler(client),
 			"Deployment":    resourceHandler.NewDeploymentHandler(client),
