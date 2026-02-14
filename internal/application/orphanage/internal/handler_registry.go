@@ -1,9 +1,19 @@
 package handler
 
 import (
+	"context"
+
 	resourceHandler "github.com/toKrzysztof/kponos/internal/application/orphanage/internal/internal"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type ResourceHandler interface {
+	// FindReferences finds all resources that reference a given Secret or ConfigMap
+	FindReferences(ctx context.Context, client client.Client, resource client.Object, namespace string) ([]client.Object, error)
+	
+	// GetResourceType returns the resource type this handler processes
+	GetResourceType() string
+}
 
 // Registry holds all resource handlers
 type HandlerRegistry struct {

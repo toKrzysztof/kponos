@@ -22,12 +22,16 @@ func NewStatusWriter(client client.Client) *StatusWriter {
 }
 
 // UpdateStatus updates the status of an OrphanagePolicy
-func (s *StatusWriter) UpdateStatus(ctx context.Context, policy *orphanagev1alpha1.OrphanagePolicy, orphans []orphanagev1alpha1.Orphan) error {
+func (s *StatusWriter) UpdateStatus(ctx context.Context, policy *orphanagev1alpha1.OrphanagePolicy, orphans []client.Object) error {
 	now := time.Now()
 
 	policy.Status.OrphanCount = len(orphans)
 	policy.Status.LastChanged = metav1.NewTime(now)
-	policy.Status.Orphans = orphans
+	policy.Status.Orphans = make([]orphanagev1alpha1.Orphan, len(orphans))
+	for i, orphan := range orphans {
+		policy.Status.Orphans[i].Kind = orphan.GetObjectKind().GroupVersionKind().Kind
+		policy.Status.Orphans[i].Name = orphan.GetName()
+	}
 
 	return s.Status().Update(ctx, policy)
 }
