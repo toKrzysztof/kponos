@@ -20,10 +20,10 @@ type Orphanage struct {
 }
 
 // NewOrphanage creates a new Orphanage instance
-func NewOrphanage(client client.Client) *Orphanage {
+func NewOrphanage(c client.Client) *Orphanage {
 	o := &Orphanage{
-		client:          client,
-		handlerRegistry: handlerRegistry.NewHandlerRegistry(client),
+		client:          c,
+		handlerRegistry: handlerRegistry.NewHandlerRegistry(c),
 	}
 
 	o.finders = map[string]OrphanFinder{

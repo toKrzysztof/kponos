@@ -9,7 +9,7 @@ import (
 
 type ResourceHandler interface {
 	// FindReferences finds all resources that reference a given Secret or ConfigMap
-	FindReferences(ctx context.Context, client client.Client, resource client.Object, namespace string) ([]client.Object, error)
+	FindReferences(ctx context.Context, c client.Client, resource client.Object, namespace string) ([]client.Object, error)
 
 	// GetResourceType returns the resource type this handler processes
 	GetResourceType() string
@@ -21,16 +21,16 @@ type HandlerRegistry struct {
 }
 
 // NewHandlerRegistry creates a new handler registry with all handlers initialized
-func NewHandlerRegistry(client client.Client) *HandlerRegistry {
+func NewHandlerRegistry(c client.Client) *HandlerRegistry {
 	return &HandlerRegistry{
 		// TODO: replace strings with strictly typed enums
 		handlers: map[string]ResourceHandler{
-			"Pod":            resourceHandler.NewPodHandler(client),
-			"Deployment":     resourceHandler.NewDeploymentHandler(client),
-			"StatefulSet":    resourceHandler.NewStatefulSetHandler(client),
-			"DaemonSet":      resourceHandler.NewDaemonSetHandler(client),
-			"Ingress":        resourceHandler.NewIngressHandler(client),
-			"ServiceAccount": resourceHandler.NewServiceAccountHandler(client),
+			"Pod":            resourceHandler.NewPodHandler(c),
+			"Deployment":     resourceHandler.NewDeploymentHandler(c),
+			"StatefulSet":    resourceHandler.NewStatefulSetHandler(c),
+			"DaemonSet":      resourceHandler.NewDaemonSetHandler(c),
+			"Ingress":        resourceHandler.NewIngressHandler(c),
+			"ServiceAccount": resourceHandler.NewServiceAccountHandler(c),
 		},
 	}
 }
