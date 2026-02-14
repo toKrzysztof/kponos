@@ -33,7 +33,6 @@ func NewReferenceAnalyzer(client client.Client) *ReferenceAnalyzer {
 		"Deployment":    internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDeployment),
 		"StatefulSet":   internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeStatefulSet),
 		"DaemonSet":     internal.NewWorkloadReferenceFinder(client, internal.WorkloadResourceTypeDaemonSet),
-		"Service":       internal.NewServiceReferenceFinder(client),
 		"Ingress":       internal.NewIngressReferenceFinder(client),
 		"ServiceAccount": internal.NewServiceAccountReferenceFinder(client),
 	}
