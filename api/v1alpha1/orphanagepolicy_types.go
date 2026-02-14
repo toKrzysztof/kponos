@@ -41,10 +41,22 @@ type OrphanagePolicySpec struct {
 	ResourceTypes []ResourceType `json:"resourceTypes,omitempty"`
 }
 
+// Orphan represents an orphaned resource
+type Orphan struct {
+	// Kind is the Kubernetes resource kind (e.g., "Secret", "ConfigMap")
+	Kind string `json:"kind"`
+	// Name is the name of the orphaned resource
+	Name string `json:"name"`
+}
+
 // OrphanagePolicyStatus defines the observed state of OrphanagePolicy.
 type OrphanagePolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// OrphanCount is the total number of orphaned resources
+	OrphanCount int `json:"orphanCount,omitempty"`
+	// LastChanged is the timestamp when the status was last updated
+	LastChanged metav1.Time `json:"lastChanged,omitempty"`
+	// Orphans is the list of orphaned resources
+	Orphans []Orphan `json:"orphans,omitempty"`
 }
 
 // +kubebuilder:object:root=true
