@@ -16,6 +16,9 @@ type ReferenceFinderStrategy interface {
 	// FindConfigMapReferences finds all resources of this type that reference the given ConfigMap
 	FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error)
 
+	// FindServiceReferences finds all resources of this type that reference the given Service
+	FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error)
+
 	// GetResourceType returns the Kubernetes resource type this strategy handles
 	GetResourceType() string
 }
@@ -29,12 +32,16 @@ type ReferenceAnalyzer struct {
 // NewReferenceAnalyzer creates a new ReferenceAnalyzer with all strategies initialized
 func NewReferenceAnalyzer(c client.Client) *ReferenceAnalyzer {
 	strategies := map[string]ReferenceFinderStrategy{
-		"Pod":            internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypePod),
-		"Deployment":     internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDeployment),
-		"StatefulSet":    internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeStatefulSet),
-		"DaemonSet":      internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDaemonSet),
-		"Ingress":        internal.NewIngressReferenceFinder(c),
-		"ServiceAccount": internal.NewServiceAccountReferenceFinder(c),
+		"Pod":                            internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypePod),
+		"Deployment":                     internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDeployment),
+		"StatefulSet":                    internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeStatefulSet),
+		"DaemonSet":                      internal.NewWorkloadReferenceFinder(c, internal.WorkloadResourceTypeDaemonSet),
+		"Ingress":                        internal.NewIngressReferenceFinder(c),
+		"ServiceAccount":                 internal.NewServiceAccountReferenceFinder(c),
+		"ValidatingWebhookConfiguration": internal.NewValidatingWebhookConfigurationReferenceFinder(c),
+		"MutatingWebhookConfiguration":   internal.NewMutatingWebhookConfigurationReferenceFinder(c),
+		"APIService":                     internal.NewAPIServiceReferenceFinder(c),
+		"CustomResourceDefinition":       internal.NewCustomResourceDefinitionReferenceFinder(c),
 	}
 
 	return &ReferenceAnalyzer{
@@ -63,4 +70,13 @@ func (s *ReferenceAnalyzer) FindReferencesForConfigMap(ctx context.Context, conf
 	}
 
 	return strategy.FindConfigMapReferences(ctx, s.Client, configMapName, namespace)
+}
+
+func (s *ReferenceAnalyzer) FindReferencesForService(ctx context.Context, serviceName, namespace string, resourceType string) ([]client.Object, error) {
+	strategy := s.strategies[resourceType]
+	if strategy == nil {
+		return nil, fmt.Errorf("unknown resource type: %s", resourceType)
+	}
+
+	return strategy.FindServiceReferences(ctx, s.Client, serviceName, namespace)
 }
