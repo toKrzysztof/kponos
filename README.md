@@ -1,5 +1,5 @@
 # kponos
-// TODO(user): Add simple overview of use/purpose
+Kponos is an operator that detects and reports orphaned resources (Secrets, Configmaps) inside a Kubernetes cluster.
 
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
