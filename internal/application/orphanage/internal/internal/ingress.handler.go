@@ -24,7 +24,8 @@ func NewIngressHandler(c client.Client) *IngressHandler {
 	}
 
 	h.finders = map[string]ResourceReferenceFinder{
-		"Secret": h.findSecretReferences,
+		"Secret":    h.findSecretReferences,
+		"ConfigMap": h.findConfigMapReferences,
 	}
 
 	return h
@@ -51,4 +52,8 @@ func (h *IngressHandler) GetResourceType() string {
 // findSecretReferences finds all Ingresses that reference the given Secret
 func (h *IngressHandler) findSecretReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
 	return h.referenceAnalyzer.FindReferencesForSecret(ctx, resourceName, namespace, "Ingress")
+}
+
+func (h *IngressHandler) findConfigMapReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
+	return []client.Object{}, nil
 }

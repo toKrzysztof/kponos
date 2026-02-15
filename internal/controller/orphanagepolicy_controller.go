@@ -15,6 +15,8 @@ import (
 	orphanagev1alpha1 "github.com/toKrzysztof/kponos/api/v1alpha1"
 	application "github.com/toKrzysztof/kponos/internal/application/orphanage"
 	presentation "github.com/toKrzysztof/kponos/internal/presentation"
+	appsv1 "k8s.io/api/apps/v1"
+	ingressv1 "k8s.io/api/networking/v1"
 )
 
 var log = logf.Log.WithName("controller_orphanagepolicy")
@@ -23,8 +25,8 @@ var log = logf.Log.WithName("controller_orphanagepolicy")
 type OrphanagePolicyReconciler struct {
 	client.Client
 	Scheme       *runtime.Scheme
-	orphanage    *application.Orphanage
-	statusWriter *presentation.StatusWriter
+	Orphanage    *application.Orphanage
+	StatusWriter *presentation.StatusWriter
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -39,7 +41,7 @@ func (r *OrphanagePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	orphanedSecrets, err := r.orphanage.FindOrphans(ctx, "Secret", req.Namespace)
+	orphanedSecrets, err := r.Orphanage.FindOrphans(ctx, "Secret", req.Namespace)
 	if err != nil {
 		logger.Error(err, "unable to find orphaned Secrets")
 		return ctrl.Result{}, err
@@ -47,7 +49,7 @@ func (r *OrphanagePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	logger.Info("Found ${orphanedSecrets} orphaned Secrets", "orphanedSecrets", len(orphanedSecrets))
 
-	orphanedConfigMaps, err := r.orphanage.FindOrphans(ctx, "ConfigMap", req.Namespace)
+	orphanedConfigMaps, err := r.Orphanage.FindOrphans(ctx, "ConfigMap", req.Namespace)
 	if err != nil {
 		logger.Error(err, "unable to find orphaned ConfigMaps")
 		return ctrl.Result{}, err
@@ -57,7 +59,7 @@ func (r *OrphanagePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	orphans := append(orphanedSecrets, orphanedConfigMaps...)
 
-	err = r.statusWriter.UpdateStatus(ctx, policy, orphans)
+	err = r.StatusWriter.UpdateStatus(ctx, policy, orphans)
 	if err != nil {
 		logger.Error(err, "unable to update status")
 		return ctrl.Result{}, err
@@ -76,30 +78,14 @@ func (r *OrphanagePolicyReconciler) mapToOrphanagePolicy(ctx context.Context, ob
 
 	requests := make([]reconcile.Request, 0, len(policyList.Items))
 
-	// Determine the resource type of the object that triggered this
-	var resourceType orphanagev1alpha1.ResourceType
-	switch obj.(type) {
-	case *corev1.Secret:
-		resourceType = orphanagev1alpha1.ResourceTypeSecret
-	case *corev1.ConfigMap:
-		resourceType = orphanagev1alpha1.ResourceTypeConfigMap
-	default:
-		return []reconcile.Request{}
-	}
-
-	// Only enqueue policies that are watching this resource type
+	// Enqueue all policies
 	for _, policy := range policyList.Items {
-		for _, rt := range policy.Spec.ResourceTypes {
-			if rt == resourceType {
-				requests = append(requests, reconcile.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      policy.Name,
-						Namespace: policy.Namespace,
-					},
-				})
-				break
-			}
-		}
+		requests = append(requests, reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      policy.Name,
+				Namespace: policy.Namespace,
+			},
+		})
 	}
 
 	return requests
@@ -112,5 +98,11 @@ func (r *OrphanagePolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Named("orphanagepolicy").
 		Watches(&corev1.Secret{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
 		Watches(&corev1.ConfigMap{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&corev1.ServiceAccount{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&ingressv1.Ingress{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&corev1.Pod{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&appsv1.Deployment{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&appsv1.StatefulSet{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
+		Watches(&appsv1.DaemonSet{}, handler.EnqueueRequestsFromMapFunc(r.mapToOrphanagePolicy)).
 		Complete(r)
 }

@@ -54,6 +54,32 @@ spec:
             type: object
           status:
             description: OrphanagePolicyStatus defines the observed state of OrphanagePolicy.
+            properties:
+              lastChanged:
+                description: LastChanged is the timestamp when the status was last
+                  updated
+                format: date-time
+                type: string
+              orphanCount:
+                description: OrphanCount is the total number of orphaned resources
+                type: integer
+              orphans:
+                description: Orphans is the list of orphaned resources
+                items:
+                  description: Orphan represents an orphaned resource
+                  properties:
+                    kind:
+                      description: Kind is the Kubernetes resource kind (e.g., "Secret",
+                        "ConfigMap")
+                      type: string
+                    name:
+                      description: Name is the name of the orphaned resource
+                      type: string
+                  required:
+                  - kind
+                  - name
+                  type: object
+                type: array
             type: object
         type: object
     served: true

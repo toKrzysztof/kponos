@@ -24,7 +24,8 @@ func NewServiceAccountHandler(c client.Client) *ServiceAccountHandler {
 	}
 
 	h.finders = map[string]ResourceReferenceFinder{
-		"Secret": h.findSecretReferences,
+		"Secret":    h.findSecretReferences,
+		"ConfigMap": h.findConfigMapReferences,
 	}
 
 	return h
@@ -51,4 +52,8 @@ func (h *ServiceAccountHandler) GetResourceType() string {
 // findSecretReferences finds all ServiceAccounts that reference the given Secret
 func (h *ServiceAccountHandler) findSecretReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
 	return h.referenceAnalyzer.FindReferencesForSecret(ctx, resourceName, namespace, "ServiceAccount")
+}
+
+func (h *ServiceAccountHandler) findConfigMapReferences(ctx context.Context, resourceName, namespace string) ([]client.Object, error) {
+	return []client.Object{}, nil
 }

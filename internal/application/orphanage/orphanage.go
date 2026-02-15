@@ -95,7 +95,6 @@ func (o *Orphanage) isOrphaned(ctx context.Context, resource client.Object, name
 		"Deployment",
 		"Ingress",
 		"Pod",
-		"Service",
 		"ServiceAccount",
 		"StatefulSet",
 	}
