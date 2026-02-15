@@ -42,6 +42,7 @@ func NewReferenceAnalyzer(c client.Client) *ReferenceAnalyzer {
 		"MutatingWebhookConfiguration":   internal.NewMutatingWebhookConfigurationReferenceFinder(c),
 		"APIService":                     internal.NewAPIServiceReferenceFinder(c),
 		"CustomResourceDefinition":       internal.NewCustomResourceDefinitionReferenceFinder(c),
+		"Service":                        internal.NewServiceReferenceFinder(c),
 	}
 
 	return &ReferenceAnalyzer{
