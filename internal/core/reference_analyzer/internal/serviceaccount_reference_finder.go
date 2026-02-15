@@ -62,6 +62,11 @@ func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Cont
 	return nil, nil
 }
 
+// ServiceAccount does not reference Services. This method is implemented to satisfy the ReferenceFinderStrategy interface.
+func (f *ServiceAccountReferenceFinder) FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error) {
+	return nil, nil
+}
+
 // GetResourceType returns the Kubernetes resource type this strategy handles
 func (f *ServiceAccountReferenceFinder) GetResourceType() string {
 	return "ServiceAccount"

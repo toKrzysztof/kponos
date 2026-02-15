@@ -234,6 +234,11 @@ func (f *WorkloadReferenceFinder) podSpecReferencesConfigMap(podSpec *corev1.Pod
 	return false
 }
 
+// Workload resources do not reference Services. This method is implemented to satisfy the ReferenceFinderStrategy interface.
+func (f *WorkloadReferenceFinder) FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error) {
+	return nil, nil
+}
+
 // GetResourceType returns the Kubernetes resource type this strategy handles
 func (f *WorkloadReferenceFinder) GetResourceType() string {
 	return string(f.resourceType)
