@@ -14,14 +14,6 @@ The finder detects references to Services in the following MutatingWebhookConfig
    - `webhooks[].clientConfig.service.name` - The name of the Service that hosts the mutating webhook
    - `webhooks[].clientConfig.service.namespace` - The namespace of the Service (must match the target Service namespace)
 
-### Secret References
-
-MutatingWebhookConfigurations do not reference Secrets. The `FindSecretReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
-### ConfigMap References
-
-MutatingWebhookConfigurations do not reference ConfigMaps. The `FindConfigMapReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
 ## Notes
 
 - The finder performs **static analysis** of MutatingWebhookConfiguration resource specifications. It does not detect dynamic references or references created at runtime.

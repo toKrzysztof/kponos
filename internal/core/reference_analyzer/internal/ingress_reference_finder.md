@@ -23,10 +23,6 @@ The finder detects references to Services in the following Ingress specification
 2. **Path Backends**
    - `spec.rules[].http.paths[].backend.service.name` - The Service name used as the backend for specific path rules
 
-### ConfigMap References
-
-Ingresses do not reference ConfigMaps. The `FindConfigMapReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
 ## Notes
 
 - The finder performs **static analysis** of Ingress resource specifications. It does not detect dynamic references or references created at runtime.

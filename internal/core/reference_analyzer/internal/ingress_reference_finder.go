@@ -9,13 +9,16 @@ import (
 
 // IngressReferenceFinder finds references to Secrets and ConfigMaps in Ingress resources
 type IngressReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewIngressReferenceFinder creates a new IngressReferenceFinder
 func NewIngressReferenceFinder(c client.Client) *IngressReferenceFinder {
 	return &IngressReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "Ingress",
+		},
 	}
 }
 
@@ -48,11 +51,6 @@ func (f *IngressReferenceFinder) ingressReferencesSecret(ingress *networkingv1.I
 	}
 
 	return false
-}
-
-// Ingress does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *IngressReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindServiceReferences finds all Ingresses that reference the given Service
@@ -96,9 +94,4 @@ func (f *IngressReferenceFinder) ingressReferencesService(ingress *networkingv1.
 	}
 
 	return false
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *IngressReferenceFinder) GetResourceType() string {
-	return "Ingress"
 }

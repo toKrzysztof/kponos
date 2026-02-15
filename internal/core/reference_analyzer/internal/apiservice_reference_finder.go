@@ -10,24 +10,17 @@ import (
 
 // APIServiceReferenceFinder finds references to Services in APIService resources
 type APIServiceReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewAPIServiceReferenceFinder creates a new APIServiceReferenceFinder
 func NewAPIServiceReferenceFinder(c client.Client) *APIServiceReferenceFinder {
 	return &APIServiceReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "APIService",
+		},
 	}
-}
-
-// APIService does not reference Secrets. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *APIServiceReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// APIService does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *APIServiceReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindServiceReferences finds all APIServices that reference the given Service
@@ -80,9 +73,4 @@ func (f *APIServiceReferenceFinder) apiServiceReferencesService(apiService *unst
 	}
 
 	return false
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *APIServiceReferenceFinder) GetResourceType() string {
-	return "APIService"
 }

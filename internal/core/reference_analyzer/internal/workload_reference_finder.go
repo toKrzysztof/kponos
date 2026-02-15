@@ -21,14 +21,17 @@ const (
 // WorkloadReferenceFinder finds references to Secrets and ConfigMaps in workload resources
 // that are Pods or create Pods (Deployment, StatefulSet, DaemonSet)
 type WorkloadReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 	resourceType WorkloadResourceType
 }
 
 // NewWorkloadReferenceFinder creates a new WorkloadReferenceFinder for the given resource type
 func NewWorkloadReferenceFinder(c client.Client, resourceType WorkloadResourceType) *WorkloadReferenceFinder {
 	return &WorkloadReferenceFinder{
-		Client:       c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: string(resourceType),
+		},
 		resourceType: resourceType,
 	}
 }
@@ -232,11 +235,6 @@ func (f *WorkloadReferenceFinder) podSpecReferencesConfigMap(podSpec *corev1.Pod
 	}
 
 	return false
-}
-
-// Workload resources do not reference Services. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *WorkloadReferenceFinder) FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // GetResourceType returns the Kubernetes resource type this strategy handles

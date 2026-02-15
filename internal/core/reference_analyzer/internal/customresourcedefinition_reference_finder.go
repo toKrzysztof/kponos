@@ -9,24 +9,17 @@ import (
 
 // CustomResourceDefinitionReferenceFinder finds references to Services in CustomResourceDefinition resources
 type CustomResourceDefinitionReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewCustomResourceDefinitionReferenceFinder creates a new CustomResourceDefinitionReferenceFinder
 func NewCustomResourceDefinitionReferenceFinder(c client.Client) *CustomResourceDefinitionReferenceFinder {
 	return &CustomResourceDefinitionReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "CustomResourceDefinition",
+		},
 	}
-}
-
-// CustomResourceDefinition does not reference Secrets. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *CustomResourceDefinitionReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// CustomResourceDefinition does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *CustomResourceDefinitionReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindServiceReferences finds all CustomResourceDefinitions that reference the given Service
@@ -59,9 +52,4 @@ func (f *CustomResourceDefinitionReferenceFinder) customResourceDefinitionRefere
 	}
 
 	return false
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *CustomResourceDefinitionReferenceFinder) GetResourceType() string {
-	return "CustomResourceDefinition"
 }
