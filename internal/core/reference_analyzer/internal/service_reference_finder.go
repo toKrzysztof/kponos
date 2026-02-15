@@ -10,29 +10,17 @@ import (
 
 // ServiceReferenceFinder finds references to Pods in Service resources
 type ServiceReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewServiceReferenceFinder creates a new ServiceReferenceFinder
 func NewServiceReferenceFinder(c client.Client) *ServiceReferenceFinder {
 	return &ServiceReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "Service",
+		},
 	}
-}
-
-// Service does not reference Secrets. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// Service does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// Service does not reference Services. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceReferenceFinder) FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindPodReferences finds all Services whose selectors match the given Pod
@@ -71,9 +59,4 @@ func (f *ServiceReferenceFinder) FindPodReferences(ctx context.Context, c client
 	}
 
 	return results, nil
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *ServiceReferenceFinder) GetResourceType() string {
-	return "Service"
 }

@@ -9,13 +9,16 @@ import (
 
 // ServiceAccountReferenceFinder finds references to Secrets and ConfigMaps in ServiceAccount resources
 type ServiceAccountReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewServiceAccountReferenceFinder creates a new ServiceAccountReferenceFinder
 func NewServiceAccountReferenceFinder(c client.Client) *ServiceAccountReferenceFinder {
 	return &ServiceAccountReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "ServiceAccount",
+		},
 	}
 }
 
@@ -55,19 +58,4 @@ func (f *ServiceAccountReferenceFinder) serviceAccountReferencesSecret(serviceAc
 	}
 
 	return false
-}
-
-// ServiceAccount does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceAccountReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// ServiceAccount does not reference Services. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ServiceAccountReferenceFinder) FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *ServiceAccountReferenceFinder) GetResourceType() string {
-	return "ServiceAccount"
 }

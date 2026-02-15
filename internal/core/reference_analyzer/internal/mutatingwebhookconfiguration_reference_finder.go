@@ -9,24 +9,17 @@ import (
 
 // MutatingWebhookConfigurationReferenceFinder finds references to Services in MutatingWebhookConfiguration resources
 type MutatingWebhookConfigurationReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewMutatingWebhookConfigurationReferenceFinder creates a new MutatingWebhookConfigurationReferenceFinder
 func NewMutatingWebhookConfigurationReferenceFinder(c client.Client) *MutatingWebhookConfigurationReferenceFinder {
 	return &MutatingWebhookConfigurationReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "MutatingWebhookConfiguration",
+		},
 	}
-}
-
-// MutatingWebhookConfiguration does not reference Secrets. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *MutatingWebhookConfigurationReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// MutatingWebhookConfiguration does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *MutatingWebhookConfigurationReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindServiceReferences finds all MutatingWebhookConfigurations that reference the given Service
@@ -61,9 +54,4 @@ func (f *MutatingWebhookConfigurationReferenceFinder) mutatingWebhookConfigurati
 	}
 
 	return false
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *MutatingWebhookConfigurationReferenceFinder) GetResourceType() string {
-	return "MutatingWebhookConfiguration"
 }

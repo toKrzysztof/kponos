@@ -19,6 +19,9 @@ type ReferenceFinderStrategy interface {
 	// FindServiceReferences finds all resources of this type that reference the given Service
 	FindServiceReferences(ctx context.Context, c client.Client, serviceName, namespace string) ([]client.Object, error)
 
+	// FindPodReferences finds all resources of this type that reference the given Pod
+	FindPodReferences(ctx context.Context, c client.Client, podName, namespace string) ([]client.Object, error)
+
 	// GetResourceType returns the Kubernetes resource type this strategy handles
 	GetResourceType() string
 }

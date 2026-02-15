@@ -9,24 +9,17 @@ import (
 
 // ValidatingWebhookConfigurationReferenceFinder finds references to Services in ValidatingWebhookConfiguration resources
 type ValidatingWebhookConfigurationReferenceFinder struct {
-	client.Client
+	BaseReferenceFinder
 }
 
 // NewValidatingWebhookConfigurationReferenceFinder creates a new ValidatingWebhookConfigurationReferenceFinder
 func NewValidatingWebhookConfigurationReferenceFinder(c client.Client) *ValidatingWebhookConfigurationReferenceFinder {
 	return &ValidatingWebhookConfigurationReferenceFinder{
-		Client: c,
+		BaseReferenceFinder: BaseReferenceFinder{
+			Client:       c,
+			resourceType: "ValidatingWebhookConfiguration",
+		},
 	}
-}
-
-// ValidatingWebhookConfiguration does not reference Secrets. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ValidatingWebhookConfigurationReferenceFinder) FindSecretReferences(ctx context.Context, c client.Client, secretName, namespace string) ([]client.Object, error) {
-	return nil, nil
-}
-
-// ValidatingWebhookConfiguration does not reference ConfigMaps. This method is implemented to satisfy the ReferenceFinderStrategy interface.
-func (f *ValidatingWebhookConfigurationReferenceFinder) FindConfigMapReferences(ctx context.Context, c client.Client, configMapName, namespace string) ([]client.Object, error) {
-	return nil, nil
 }
 
 // FindServiceReferences finds all ValidatingWebhookConfigurations that reference the given Service
@@ -61,9 +54,4 @@ func (f *ValidatingWebhookConfigurationReferenceFinder) validatingWebhookConfigu
 	}
 
 	return false
-}
-
-// GetResourceType returns the Kubernetes resource type this strategy handles
-func (f *ValidatingWebhookConfigurationReferenceFinder) GetResourceType() string {
-	return "ValidatingWebhookConfiguration"
 }
