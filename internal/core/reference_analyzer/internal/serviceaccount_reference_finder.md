@@ -16,10 +16,6 @@ The finder detects references to Secrets in the following ServiceAccount specifi
 2. **Image Pull Secrets**
    - `imagePullSecrets[].name` - Secrets used for pulling container images from private registries when Pods use this ServiceAccount
 
-### ConfigMap References
-
-ServiceAccounts do not reference ConfigMaps. The `FindConfigMapReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
 ## Notes
 
 - The finder performs **static analysis** of ServiceAccount resource specifications. It does not detect dynamic references or references created at runtime.

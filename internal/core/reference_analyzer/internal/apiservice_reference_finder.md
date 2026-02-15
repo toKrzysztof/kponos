@@ -14,14 +14,6 @@ The finder detects references to Services in the following APIService specificat
    - `spec.service.name` - The name of the Service that hosts the extension API server
    - `spec.service.namespace` - The namespace of the Service (must match the target Service namespace)
 
-### Secret References
-
-APIServices do not reference Secrets. The `FindSecretReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
-### ConfigMap References
-
-APIServices do not reference ConfigMaps. The `FindConfigMapReferences` method is implemented to satisfy the `ReferenceFinderStrategy` interface but always returns an empty result.
-
 ## Notes
 
 - The finder performs **static analysis** of APIService resource specifications. It does not detect dynamic references or references created at runtime.
