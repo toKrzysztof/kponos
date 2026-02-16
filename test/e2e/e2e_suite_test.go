@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -55,8 +56,16 @@ func TestE2E(t *testing.T) {
 var _ = BeforeSuite(func() {
 	By("installing CRDs")
 	cmd := exec.Command("make", "install")
-	_, err := utils.Run(cmd)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to install CRDs")
+	output, err := utils.Run(cmd)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), fmt.Sprintf("Failed to install CRDs. Output: %s", output))
+
+	By("waiting for OrphanagePolicy CRD to be available")
+	verifyCRDAvailable := func(g Gomega) {
+		cmd := exec.Command("kubectl", "get", "crd", "orphanagepolicies.orphanage.kponos.io")
+		_, err := utils.Run(cmd)
+		g.Expect(err).NotTo(HaveOccurred(), "OrphanagePolicy CRD not yet available")
+	}
+	Eventually(verifyCRDAvailable).WithTimeout(30 * time.Second).WithPolling(1 * time.Second).Should(Succeed())
 
 	By("building the manager(Operator) image")
 	cmd = exec.Command("make", "docker-build", fmt.Sprintf("IMG=%s", projectImage))

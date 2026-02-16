@@ -16,14 +16,14 @@ var _ = Describe("Secret Orphan Detection", Ordered, func() {
 	var testNamespace string
 
 	BeforeAll(func() {
-		// Wait for CRD to be available
-		By("waiting for OrphanagePolicy CRD to be available")
+		// Verify CRD is available (should already be from BeforeSuite, but check as safety net)
+		By("verifying OrphanagePolicy CRD is available")
 		verifyCRDAvailable := func(g Gomega) {
 			cmd := exec.Command("kubectl", "get", "crd", "orphanagepolicies.orphanage.kponos.io")
 			_, err := utils.Run(cmd)
-			g.Expect(err).NotTo(HaveOccurred(), "OrphanagePolicy CRD not yet available")
+			g.Expect(err).NotTo(HaveOccurred(), "OrphanagePolicy CRD not available")
 		}
-		Eventually(verifyCRDAvailable).Should(Succeed())
+		Eventually(verifyCRDAvailable).WithTimeout(10 * time.Second).WithPolling(500 * time.Millisecond).Should(Succeed())
 
 		// Create a test namespace
 		testNamespace = "secret-orphan-test-" + utils.RandomString(5)
@@ -346,6 +346,81 @@ spec:
       - name: secret-vol
         secret:
           secretName: %s`, resourceName, namespace, resourceName, resourceName, secretName)
+			},
+		}),
+		Entry("Ingress via TLS", testCase{
+			resourceType:  "Ingress",
+			secretName:    "ingress-tls-secret",
+			resourceName:  "test-ingress-tls",
+			referencePath: "spec.tls[].secretName",
+			secretData:    []string{"--from-literal=tls.crt=cert", "--from-literal=tls.key=key"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
+				return fmt.Sprintf(`apiVersion: v1
+kind: Service
+metadata:
+  name: test-ingress-backend
+  namespace: %s
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: test
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - example.com
+    secretName: %s
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: test-ingress-backend
+            port:
+              number: 80`, namespace, resourceName, namespace, secretName)
+			},
+		}),
+		Entry("ServiceAccount via secrets", testCase{
+			resourceType:  "ServiceAccount",
+			secretName:    "sa-secret",
+			resourceName:  "test-sa-secrets",
+			referencePath: "secrets[].name",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
+				return fmt.Sprintf(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: %s
+  namespace: %s
+secrets:
+- name: %s`, resourceName, namespace, secretName)
+			},
+		}),
+		Entry("ServiceAccount via imagePullSecrets", testCase{
+			resourceType:  "ServiceAccount",
+			secretName:    "sa-imagepull-secret",
+			resourceName:  "test-sa-imagepull",
+			referencePath: "imagePullSecrets[].name",
+			secretData:    []string{"--from-literal=.dockerconfigjson={\"auths\":{}}"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
+				return fmt.Sprintf(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: %s
+  namespace: %s
+imagePullSecrets:
+- name: %s`, resourceName, namespace, secretName)
 			},
 		}),
 	)
