@@ -12,7 +12,7 @@ import (
 	"github.com/toKrzysztof/kponos/test/utils"
 )
 
-var _ = Describe("ConfigMap Orphan Detection", Ordered, func() {
+var _ = Describe("Secret Orphan Detection", Ordered, func() {
 	var testNamespace string
 
 	BeforeAll(func() {
@@ -26,21 +26,21 @@ var _ = Describe("ConfigMap Orphan Detection", Ordered, func() {
 		Eventually(verifyCRDAvailable).Should(Succeed())
 
 		// Create a test namespace
-		testNamespace = "configmap-orphan-test-" + utils.RandomString(5)
+		testNamespace = "secret-orphan-test-" + utils.RandomString(5)
 		cmd := exec.Command("kubectl", "create", "ns", testNamespace)
 		_, err := utils.Run(cmd)
 
 		Expect(err).NotTo(HaveOccurred(), "Failed to create test namespace")
 
-		// Create OrphanagePolicy for ConfigMaps
+		// Create OrphanagePolicy for Secrets
 		policyYAML := fmt.Sprintf(`apiVersion: orphanage.kponos.io/v1alpha1
 kind: OrphanagePolicy
 metadata:
-  name: configmap-test-policy
+  name: secret-test-policy
   namespace: %s
 spec:
   resourceTypes:
-    - ConfigMap`, testNamespace)
+    - Secret`, testNamespace)
 
 		cmd = exec.Command("kubectl", "apply", "-f", "-")
 		cmd.Stdin = strings.NewReader(policyYAML)
@@ -60,47 +60,47 @@ spec:
 
 	type testCase struct {
 		resourceType  string // Pod, Deployment, StatefulSet, DaemonSet
-		configMapName string
+		secretName    string
 		resourceName  string
 		referencePath string // description of the reference path
-		resourceYAML  func(namespace, resourceName, configMapName string) string
-		configMapData []string // --from-literal args
+		resourceYAML  func(namespace, resourceName, secretName string) string
+		secretData    []string // --from-literal args
 	}
 
-	DescribeTable("should NOT detect ConfigMap as orphaned when referenced",
+	DescribeTable("should NOT detect Secret as orphaned when referenced",
 		func(tc testCase) {
-			By(fmt.Sprintf("creating ConfigMap %s", tc.configMapName))
-			args := append([]string{"create", "configmap", tc.configMapName, "-n", testNamespace}, tc.configMapData...)
+			By(fmt.Sprintf("creating Secret %s", tc.secretName))
+			args := append([]string{"create", "secret", "generic", tc.secretName, "-n", testNamespace}, tc.secretData...)
 			cmd := exec.Command("kubectl", args...)
 			_, err := utils.Run(cmd)
 			Expect(err).NotTo(HaveOccurred())
 
-			By(fmt.Sprintf("creating %s %s that references ConfigMap %s (path: %s)", tc.resourceType, tc.resourceName,
-				tc.configMapName, tc.referencePath))
-			resourceYAML := tc.resourceYAML(testNamespace, tc.resourceName, tc.configMapName)
+			By(fmt.Sprintf("creating %s %s that references Secret %s (path: %s)", tc.resourceType, tc.resourceName,
+				tc.secretName, tc.referencePath))
+			resourceYAML := tc.resourceYAML(testNamespace, tc.resourceName, tc.secretName)
 			cmd = exec.Command("kubectl", "apply", "-f", "-")
 			cmd.Stdin = strings.NewReader(resourceYAML)
 			_, err = utils.Run(cmd)
 			Expect(err).NotTo(HaveOccurred())
 
-			By(fmt.Sprintf("verifying ConfigMap %s is NOT in orphans list (tested via %s)", tc.configMapName, tc.referencePath))
+			By(fmt.Sprintf("verifying Secret %s is NOT in orphans list (tested via %s)", tc.secretName, tc.referencePath))
 			verifyNotOrphaned := func(g Gomega) {
-				cmd := exec.Command("kubectl", "get", "orphanagepolicy", "configmap-test-policy",
+				cmd := exec.Command("kubectl", "get", "orphanagepolicy", "secret-test-policy",
 					"-n", testNamespace,
-					"-o", fmt.Sprintf("jsonpath={.status.orphans[?(@.name==\"%s\")]}", tc.configMapName))
+					"-o", fmt.Sprintf("jsonpath={.status.orphans[?(@.name==\"%s\")]}", tc.secretName))
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(output).To(BeEmpty(), "ConfigMap should not be in orphans list")
+				g.Expect(output).To(BeEmpty(), "Secret should not be in orphans list")
 			}
 			Eventually(verifyNotOrphaned).Should(Succeed())
 		},
 		Entry("Pod via volume", testCase{
 			resourceType:  "Pod",
-			configMapName: "pod-volume-configmap",
+			secretName:    "pod-volume-secret",
 			resourceName:  "test-pod-volume",
-			referencePath: "volumes[].configMap.name",
-			configMapData: []string{"--from-literal=key1=value1"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "volumes[].secret.secretName",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: v1
 kind: Pod
 metadata:
@@ -112,21 +112,21 @@ spec:
     image: busybox:latest
     command: ["sleep", "infinity"]
     volumeMounts:
-    - name: config-vol
-      mountPath: /etc/config
+    - name: secret-vol
+      mountPath: /etc/secret
   volumes:
-  - name: config-vol
-    configMap:
-      name: %s`, resourceName, namespace, configMapName)
+  - name: secret-vol
+    secret:
+      secretName: %s`, resourceName, namespace, secretName)
 			},
 		}),
 		Entry("Pod via envFrom", testCase{
 			resourceType:  "Pod",
-			configMapName: "pod-envfrom-configmap",
+			secretName:    "pod-envfrom-secret",
 			resourceName:  "test-pod-envfrom",
-			referencePath: "containers[].envFrom[].configMapRef.name",
-			configMapData: []string{"--from-literal=key1=value1"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "containers[].envFrom[].secretRef.name",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: v1
 kind: Pod
 metadata:
@@ -138,17 +138,17 @@ spec:
     image: busybox:latest
     command: ["sleep", "infinity"]
     envFrom:
-    - configMapRef:
-        name: %s`, resourceName, namespace, configMapName)
+    - secretRef:
+        name: %s`, resourceName, namespace, secretName)
 			},
 		}),
 		Entry("Pod via env.valueFrom", testCase{
 			resourceType:  "Pod",
-			configMapName: "pod-env-configmap",
+			secretName:    "pod-env-secret",
 			resourceName:  "test-pod-env",
-			referencePath: "containers[].env[].valueFrom.configMapKeyRef.name",
-			configMapData: []string{"--from-literal=app.properties=key=value"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "containers[].env[].valueFrom.secretKeyRef.name",
+			secretData:    []string{"--from-literal=app.properties=key=value"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: v1
 kind: Pod
 metadata:
@@ -162,18 +162,18 @@ spec:
     env:
     - name: APP_PROPERTIES
       valueFrom:
-        configMapKeyRef:
+        secretKeyRef:
           name: %s
-          key: app.properties`, resourceName, namespace, configMapName)
+          key: app.properties`, resourceName, namespace, secretName)
 			},
 		}),
 		Entry("Pod initContainer via envFrom", testCase{
 			resourceType:  "Pod",
-			configMapName: "pod-init-envfrom-configmap",
+			secretName:    "pod-init-envfrom-secret",
 			resourceName:  "test-pod-init-envfrom",
-			referencePath: "initContainers[].envFrom[].configMapRef.name",
-			configMapData: []string{"--from-literal=key1=value1"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "initContainers[].envFrom[].secretRef.name",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: v1
 kind: Pod
 metadata:
@@ -185,21 +185,21 @@ spec:
     image: busybox:latest
     command: ["sh", "-c", "echo init done"]
     envFrom:
-    - configMapRef:
+    - secretRef:
         name: %s
   containers:
   - name: test
     image: busybox:latest
-    command: ["sleep", "infinity"]`, resourceName, namespace, configMapName)
+    command: ["sleep", "infinity"]`, resourceName, namespace, secretName)
 			},
 		}),
 		Entry("Pod initContainer via env.valueFrom", testCase{
 			resourceType:  "Pod",
-			configMapName: "pod-init-env-configmap",
+			secretName:    "pod-init-env-secret",
 			resourceName:  "test-pod-init-env",
-			referencePath: "initContainers[].env[].valueFrom.configMapKeyRef.name",
-			configMapData: []string{"--from-literal=init.properties=key=value"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "initContainers[].env[].valueFrom.secretKeyRef.name",
+			secretData:    []string{"--from-literal=init.properties=key=value"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: v1
 kind: Pod
 metadata:
@@ -213,22 +213,43 @@ spec:
     env:
     - name: INIT_PROPERTIES
       valueFrom:
-        configMapKeyRef:
+        secretKeyRef:
           name: %s
           key: init.properties
   containers:
   - name: test
     image: busybox:latest
-    command: ["sleep", "infinity"]`, resourceName, namespace, configMapName)
+    command: ["sleep", "infinity"]`, resourceName, namespace, secretName)
+			},
+		}),
+		Entry("Pod via imagePullSecrets", testCase{
+			resourceType:  "Pod",
+			secretName:    "pod-imagepull-secret",
+			resourceName:  "test-pod-imagepull",
+			referencePath: "imagePullSecrets[].name",
+			secretData:    []string{"--from-literal=.dockerconfigjson={\"auths\":{}}"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
+				return fmt.Sprintf(`apiVersion: v1
+kind: Pod
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  imagePullSecrets:
+  - name: %s
+  containers:
+  - name: test
+    image: busybox:latest
+    command: ["sleep", "infinity"]`, resourceName, namespace, secretName)
 			},
 		}),
 		Entry("Deployment via volume", testCase{
 			resourceType:  "Deployment",
-			configMapName: "deployment-volume-configmap",
+			secretName:    "deployment-volume-secret",
 			resourceName:  "test-deployment-volume",
-			referencePath: "volumes[].configMap.name",
-			configMapData: []string{"--from-literal=key1=value1"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "volumes[].secret.secretName",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -249,21 +270,21 @@ spec:
         image: busybox:latest
         command: ["sleep", "infinity"]
         volumeMounts:
-        - name: config-vol
-          mountPath: /etc/config
+        - name: secret-vol
+          mountPath: /etc/secret
       volumes:
-      - name: config-vol
-        configMap:
-          name: %s`, resourceName, namespace, resourceName, resourceName, configMapName)
+      - name: secret-vol
+        secret:
+          secretName: %s`, resourceName, namespace, resourceName, resourceName, secretName)
 			},
 		}),
 		Entry("StatefulSet via volume", testCase{
 			resourceType:  "StatefulSet",
-			configMapName: "statefulset-volume-configmap",
+			secretName:    "statefulset-volume-secret",
 			resourceName:  "test-statefulset-volume",
-			referencePath: "volumes[].configMap.name",
-			configMapData: []string{"--from-literal=config.yaml=key:value"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "volumes[].secret.secretName",
+			secretData:    []string{"--from-literal=config.yaml=key:value"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -285,21 +306,21 @@ spec:
         image: busybox:latest
         command: ["sleep", "infinity"]
         volumeMounts:
-        - name: config
-          mountPath: /etc/config
+        - name: secret
+          mountPath: /etc/secret
       volumes:
-      - name: config
-        configMap:
-          name: %s`, resourceName, namespace, resourceName, resourceName, resourceName, configMapName)
+      - name: secret
+        secret:
+          secretName: %s`, resourceName, namespace, resourceName, resourceName, resourceName, secretName)
 			},
 		}),
 		Entry("DaemonSet via volume", testCase{
 			resourceType:  "DaemonSet",
-			configMapName: "daemonset-volume-configmap",
+			secretName:    "daemonset-volume-secret",
 			resourceName:  "test-daemonset-volume",
-			referencePath: "volumes[].configMap.name",
-			configMapData: []string{"--from-literal=key1=value1"},
-			resourceYAML: func(namespace, resourceName, configMapName string) string {
+			referencePath: "volumes[].secret.secretName",
+			secretData:    []string{"--from-literal=key1=value1"},
+			resourceYAML: func(namespace, resourceName, secretName string) string {
 				return fmt.Sprintf(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -319,12 +340,12 @@ spec:
         image: busybox:latest
         command: ["sleep", "infinity"]
         volumeMounts:
-        - name: config-vol
-          mountPath: /etc/config
+        - name: secret-vol
+          mountPath: /etc/secret
       volumes:
-      - name: config-vol
-        configMap:
-          name: %s`, resourceName, namespace, resourceName, resourceName, configMapName)
+      - name: secret-vol
+        secret:
+          secretName: %s`, resourceName, namespace, resourceName, resourceName, secretName)
 			},
 		}),
 	)
