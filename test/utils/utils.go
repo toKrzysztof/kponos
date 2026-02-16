@@ -20,9 +20,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2" // nolint:revive,staticcheck
 )
@@ -251,4 +253,15 @@ func UncommentCode(filename, target, prefix string) error {
 	}
 
 	return nil
+}
+
+// RandomString generates a random string of the specified length
+func RandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rng.Intn(len(charset))]
+	}
+	return string(b)
 }
