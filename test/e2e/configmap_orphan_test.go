@@ -66,7 +66,8 @@ spec:
 			_, err := utils.Run(cmd)
 			Expect(err).NotTo(HaveOccurred())
 
-			By(fmt.Sprintf("creating %s %s that references ConfigMap %s (path: %s)", tc.resourceType, tc.resourceName, tc.configMapName, tc.referencePath))
+			By(fmt.Sprintf("creating %s %s that references ConfigMap %s (path: %s)", tc.resourceType, tc.resourceName,
+				tc.configMapName, tc.referencePath))
 			resourceYAML := tc.resourceYAML(testNamespace, tc.resourceName, tc.configMapName)
 			cmd = exec.Command("kubectl", "apply", "-f", "-")
 			cmd.Stdin = strings.NewReader(resourceYAML)
