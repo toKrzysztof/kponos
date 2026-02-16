@@ -16,6 +16,15 @@ var _ = Describe("ConfigMap Orphan Detection", Ordered, func() {
 	var testNamespace string
 
 	BeforeAll(func() {
+		// Verify CRD is available (should already be from BeforeSuite, but check as safety net)
+		By("verifying OrphanagePolicy CRD is available")
+		verifyCRDAvailable := func(g Gomega) {
+			cmd := exec.Command("kubectl", "get", "crd", "orphanagepolicies.orphanage.kponos.io")
+			_, err := utils.Run(cmd)
+			g.Expect(err).NotTo(HaveOccurred(), "OrphanagePolicy CRD not available")
+		}
+		Eventually(verifyCRDAvailable).WithTimeout(10 * time.Second).WithPolling(500 * time.Millisecond).Should(Succeed())
+
 		// Create a test namespace
 		testNamespace = "configmap-orphan-test-" + utils.RandomString(5)
 		cmd := exec.Command("kubectl", "create", "ns", testNamespace)
